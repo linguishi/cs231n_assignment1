@@ -116,8 +116,25 @@ class TwoLayerNet(object):
     Wb2 = np.r_[b2.reshape(1, -1), W2]
     X2 = np.c_[np.ones([N, 1]), L1_Relu_out]
     # compute dWb2 without regularization
+    score_unify = score_non_log/np.sum(score_non_log, axis=1).reshape(-1, 1)
+    score_unify[np.arange(N), y] -= 1
+    dWb2 = X2.T.dot(score_unify)/N
+    grads['b2'] = dWb2[0]
+    dX2 = score_unify.dot(Wb2.T)/N
+    # d(Relu output)
+    dL1_Relu_out = dX2[:, 1:]
+    # compute dW2 with regularization
+    grads['W2'] = dWb2[1:, :] + reg * W2
+    # compute the first stage
+    dL1_out = (L1_out > 0) * dL1_Relu_out
+    # combine W1 and b1 to make parameter matrix Wb1, to compute Wb1, need to 
+    # construct X1
+    # Wb1 = np.r_[b1.reshape(1, -1), W1]
+    X1 = np.c_[np.ones([N, 1]), X]
+    dWb1 = X1.T.dot(dL1_out)
+    grads['b1']  = dWb1[0]
+    grads['W1'] = dWb1[1:, :] + reg * W1
     
-
 
     #############################################################################
     #                              END OF YOUR CODE                             #
